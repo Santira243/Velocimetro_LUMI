@@ -1,0 +1,58 @@
+
+int Sensor,Anterior=1,NF;
+double tiempo_flanco,TT,T0;
+float RPM;
+//double L_Rueda=3.141592654*0.0254*X //0.0254 metros = 1 pulgada
+double L_Rueda=3.141592654*0.0245;
+float Vi;
+float Valores[3];
+int contador = 0;
+float promedio = 0; 
+double tiempo_detenido=0;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(A0, INPUT);
+  Sensor = analogRead(A0);
+  Anterior = 200; 
+  T0 = millis();
+}
+
+void loop() {
+  Sensor = analogRead(A0);
+
+  if (Sensor ==0&& Anterior>5){ //FLANCO DESCENDENTE
+    tiempo_flanco = millis();
+    NF = NF+1; 
+      if (NF == 1) 
+       {
+        T0 = tiempo_flanco;
+        }
+   }
+  if(NF==2){
+    TT = tiempo_flanco - T0;
+    Vi=1000*L_Rueda/(TT);
+    NF=0;
+    TT=0;
+    Valores[contador] = Vi;
+    contador++;
+//   Serial.print ("Vi:"); 
+//   Serial.println( Vi);
+     if (contador == 3)
+        {
+         promedio =  Valores[0]+Valores[1]+Valores[2];
+         promedio = promedio /3.0;
+         Serial.println(promedio);
+         contador = 0;
+        }
+    }
+ 
+  tiempo_detenido = abs(T0- millis());
+
+   if (tiempo_detenido > 4000)
+  {
+    T0 = millis();
+    Serial.println("Sistema Parado");
+  }
+  Anterior=Sensor;
+}
